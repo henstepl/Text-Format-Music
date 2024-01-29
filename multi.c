@@ -190,11 +190,11 @@ void do_rh (TC, CN uint32_t meas, CN uint32_t beg, CN _Bool pcusn, char tpose, C
 	uint64_t dro = dr;
 		printf("NEEDFOR %lu \n", dr);
 	#endif
-	static unsigned veloc_done = 0;
+	static unsigned vloc_done = 0;
 	size_t off = 0;
 	if (dn) /*t("\t\\\\\n\t{{")*/; else {PRPSTAF; PRPKEYS;}
 	if (hasstf[e]==1) t("@\0\0\0\0"), hasstf[e]=2;
-	if (dn==0&&LY?l[e]>tM?DEBG?1:(F aboveCs)|(F isFlt)|(F velocs)|1:0:0) //return;
+	if (dn==0&&LY?l[e]>tM?DEBG?1:(F aboveCs)|(F isFlt)|(F vlocs)|1:0:0) //return;
 		{if(DEBG) {u2 u=do_last(tM*vL/ *vM,e,l[e]);off=u.n+0; printf("DO OFF %lu \n", off);if(!u.b) return; do_rh(tM,e,meas,beg,pcusn,tpose,inst,l[e]-u.t,dr,off);/*if(u.b)t("}}\n>>\n");*/ } return;}
 	if (LY&&dn==0)	FORRS;
 	if (LY) dn?S[e]-=(offf_2=offf/*-1+AMTT*/):0,LOC,Z '<';
@@ -225,14 +225,14 @@ void do_rh (TC, CN uint32_t meas, CN uint32_t beg, CN _Bool pcusn, char tpose, C
 			tpose+=24; break;
 	}
 
-	for (int32_t numC = *aboveCs, velNow; numC||(F aboveCs)|(LY?Z '>',(F isFlt):0)|(F aboveCs); --numC) {
-		if (velocs NN) {
-			velNow = velocs[++veloc_done];
-			if (veloc_done == *velocs) {veloc_done = 0, FREE(velocs);}
-		} else velNow = (uint8_t) veloc;
+	for (int32_t numC = *aboveCs, vlNow; numC||(F aboveCs)|(LY?Z '>',(F isFlt):0)|(F aboveCs); --numC) {
+		if (vlocs NN) {
+			vlNow = vlocs[++vloc_done];
+			if (vloc_done == *vlocs) {vloc_done = 0, FREE(vlocs);}
+		} else vlNow = (uint8_t) volec;
 		if (!LY?c(tM,pcusn?3:14),
-			A 0x90+e, A 0x3c+aboveCs[numC]+tpose, A velNow?velNow:1, pcusn==0?C (uint64_t)(tM+dr),
-			A 0x80+e, A 0x3c+aboveCs[numC]+tpose, A velNow?velNow:1 :1:0)
+			A 0x90+e, A 0x3c+aboveCs[numC]+tpose, A vlNow?vlNow:1, pcusn==0?C (uint64_t)(tM+dr),
+			A 0x80+e, A 0x3c+aboveCs[numC]+tpose, A vlNow?vlNow:1 :1:0)
 			continue; //else
 		Z 'a' + (aboveCs[numC]+49)%7;
 		isFlt[numC]&&isFlt[numC]<=FLT?t("es"),isFlt[numC]==FLD?t("es"):0: isFlt[numC]>=SHP?t("is"),isFlt[numC]==SHD?t("is"):0:0;

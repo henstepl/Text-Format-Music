@@ -27,8 +27,8 @@ long long unsigned gcd(long long unsigned a, long long unsigned b) {return b?gcd
   #undef __INT8_C
   #define __INT8_C(x)
 #endif
-#define ALL(x) 	x)= __INT8_C((typeof(x)))	realloc(x,sizeof(*x) *
-#define CLL(x) 	x)= __INT8_C((typeof(x)))	calloc(sizeof(*x) ,
+#define ALL(x) 	x)= __INT8_C((typeof(x)))	realloc(x,sizeof(*x) *	//macro collapses to nothing for tcc
+#define CLL(x) 	x)= __INT8_C((typeof(x)))	calloc(sizeof(*x) ,	//macro collapses to nothing for tcc
 #define  N  =NULL
 #define EN ==NULL
 #define NN !=NULL
@@ -43,6 +43,7 @@ uint8_t FREETURN(char** ptr) {free(*ptr); *ptr N; return 0;}
 #define VW (uint32_t*)
 #define VX (uint64_t*)
 #define PRNTIF(x,y) (printf("%.*s", -(y), x))
+#define PRINTME printf
 #define IF(...) if((__VA_ARGS__))
 
 #define TET 12
@@ -56,6 +57,7 @@ CN int8_t SHR[] = { 3, -2,  5,  0, -5,  2, -3,  4, -1, -6,  1, -4, 3, -2,  5,  0
 #define HF(b) if (a>63) printf(b,a=63), putchar('\n'); else if (a<-64) printf(b,a=-64), putchar('\n')
 
 #define do(x,...) do##x(LY?tM* *vM/vL:Do?((tM+of[I])*nums[I]/dens[I])+oF[I]:tM*vL/ *vM, YTR channel, __VA_ARGS__)
+#define doo(x,...) volec=getVel(YYG yy_buffer_stack_top),do##x(LY?tM* *vM/vL:Do?((tM+of[I])*nums[I]/dens[I])+oF[I]:tM*vL/ *vM, YTR channel, __VA_ARGS__)
 #define DO(x,...) DO##x(LY?tM* *vM/vL:Do?((tM+of[I])*nums[I]/dens[I])+oF[I]:0         , YTR channel, __VA_ARGS__)
 
 }
@@ -80,9 +82,10 @@ CN int8_t SHR[] = { 3, -2,  5,  0, -5,  2, -3,  4, -1, -6,  1, -4, 3, -2,  5,  0
 %option		nounistd never-interactive
 %option		warn prefix="tfm" 8bit
 		#// in spite of the alt prefix, let's allude to "yy" in the code
-		#// except tfmlex_init/tfmlex_destroy and, for old Flex compatibility, these two:
+		#// except tfmlex_init/tfmlex_destroy and, for old Flex compatibility, these three:
 		#define yy_load_buffer_state tfm_load_buffer_state
 		#define yyensure_buffer_stack tfmensure_buffer_stack
+		#define yy_scan_bytes tfm_scan_bytes
 %top{
 //custom values to add to struct yy_buffer_state.
 #define yy_fill_buffer yy_fill_buffer YY_BUFFER_STUFF
@@ -98,15 +101,18 @@ trr *ytr N;
 #define YTR ytr[YYG yy_buffer_stack_top].
 #define INIT_BUF(buf) memset ((void*)(&buf), 0, sizeof(struct transfer)), buf.vEloc = 127
 #define INIT_VEL(buf) memset ((void*)(&buf), 0, sizeof(struct transfer))
+
 typedef unsigned UTRANS;
 typedef int DTRANS;
 struct transfer {
   UTRANS channel;
   UTRANS instrument;
-  int vEloc;
   DTRANS transpose;
   DTRANS aboveC;
   DTRANS isFl;
+  int vEloc;
+  _Bool doto;
+  _Bool dido;
 }; // refer to generated lex.tfm.c for the rest and redefine YY_BUFFER_STUFF later:}
 		#undef YY_BUFFER_STUFF
 		#define YY_BUFFER_STUFF
@@ -153,9 +159,8 @@ NALT		[^` ]
 #define YYL yyleng
 #define YYP	(YYT+YYC->charsAftTil)
 #define MYYL	(YYL-YYC->charsAftTil)
-#define RETQUITIFLAST return YYG yy_buffer_stack_top--
 #define BREAK(x) while (YYC->skipMany = x - 1, YYC->charsAftTil += x, YYC->toQuit = !YYG yy_hold_char, \
-  YYG yy_start != 1 + 2 * INITIAL) RETQUITIFLAST;
+  YYG yy_start != 1 + 2 * INITIAL) return 1;
 #define BREAK_OVERRIDE(x) BREAK(x)
 #define YY_BREAK BREAK(MYYL); break;
 
@@ -171,7 +176,7 @@ uint64_t vL = 4, *vC N, *vX N, *vM N; int64_t *of N, *oF N;
 uint32_t *nums N, *dens N, vN=1, I;
 _Bool **P0 N; uint32_t **PW N, **NM N, **T1 N, **B1 N;
 
-uint32_t veloc = 127, *velocs N;
+uint32_t volec = 127, *vlocs N;
 long unsigned * tiMes N;
 uint32_t tL;
 uint64_t tM = 0;
@@ -181,16 +186,17 @@ char * tx N; uint32_t txL;
 uint32_t *begins N; // index in tx where each squareline begins
 uint32_t *typLns N; // aka last in block: if finding beginning OF firstblock do (blk-1?typLns[blk-1]:0)
 
-uint32_t **rhsAt N, **rhTyp N;
+uint32_t **rhsAt N, **rhTyp N, **trnAt N;
 uint32_t *mBlkOff N, *mFro N, *mMid N, *mBak N, *mBlk N, *bMea N, *bSpc N;
  int32_t *aboveCs N; uint32_t *isFlt N;
 #//char *widR;		//this is actually declared at the end of this file
 #//char *measchr;	//this is actually declared at the end of this file
+#//char *trnR;	//this is actually declared at the end of this file
 
 #define NUMBLK typLns[0]
 #define NUM_LN begins[0]
 #define NUMMEA mBlk[0]
-#define TYPEGETPLUS velocs	//why wouldn't I?
+#define TYPEGETPLUS vlocs	//why wouldn't I?
 
 typedef struct u2 {uint64_t t; uint64_t t2; uint64_t n; uint64_t n2; _Bool b; _Bool b2;} u2;
 #define U22 {0,0,0,0,0,0}
@@ -210,7 +216,9 @@ uint32_t *repeatTo N, *repeatFr N;
 
 }
 		#define YY_DECL \
-		int doVeloc (int in) {size_t t=YBT;for(;ytr[YBT].vEloc+4==0;++t);ytr[t].vEloc=in; return in;} \
+		int getVel (unsigned in) {for(;in<topBlkLns&&ytr[in].doto==1;++in); return ytr[in].vEloc;} \
+		int setVel (unsigned in, int amt) {for(;in<topBlkLns&&ytr[in].doto==1;++in); return ytr[in].vEloc=amt;} \
+		/*int setVel (int in) {size_t t=YBT;for(;ytr[YBT].vEloc+4==0;++t);ytr[t].vEloc=in; return in;}*/ \
 		size_t yylex (uint32_t meas1, uint32_t start2, uint64_t measTime3, void * yyscanner); \
 		size_t yylex (uint32_t meas1, uint32_t start2, uint64_t measTime3, void * yyscanner)
 	
@@ -225,20 +233,18 @@ uint32_t *repeatTo N, *repeatFr N;
 %%
 	(void)yyscanner; // for gcc -Wextra
 	if (YYG yy_start != 1 + 2 * INITIAL) {	// in which case we're in SQUARES or MEASURES or firstrun
-		if (YYG yy_buffer_stack_top == topBlkLns-1)	veloc = 127;
-		if ((YTR vEloc&3) + 1)				veloc = YTR vEloc;
 		if (YYC->toQuit ||
-		   YYC->skipMany ? YYC->skipMany-- : 0)		RETQUITIFLAST;
+		   YYC->skipMany ? YYC->skipMany-- : 0)		return 1;
 		if (YYG yy_hold_char) *YYG yy_c_buf_p = YYG yy_hold_char;
 		if (YYC->yy_buf_new) YYC->yy_buf_new=0,
 			YYC->yy_buf_pos = YYC->yy_ch_buf + blksAt[YBT][mBlk[meas1]-1];
 		yy_load_buffer_state (SCAN);
-		YYC->yy_at_bol = 1; //uint16_t k=4; except this was locked to length of []xx
+		YYC->yy_at_bol = 1;
 		if (YYC->charsAftTil<blksDo[YBT][mBlk[meas1]-1])
 			memset(&YYC->yy_buf_pos[4], SKIPCH, (YYC->charsAftTil-4));
-		else IF (YYC->toQuit=1) RETQUITIFLAST;
-	}
+		else IF (YYC->toQuit=1) return 1;
 	#define CHARSAFTTILFIRST mBlkOff[toMeas] + mFro[toMeas]
+	}
 
 <INITIAL>{
 .	/*input lines not beginning in [...] are comments*/
@@ -277,7 +283,7 @@ uint32_t *repeatTo N, *repeatFr N;
 	YYT[YYL] = YYG yy_hold_char;
 	if PRNTIF("NO PITCH FOUND! ", aboveCs EN)
 		do putchar(*YYT-SKIPCH?*YYT:'.'); while (*++YYT-'\0'||!putchar('\n')); else
-	do(_rh,meas1,start2,0,YTR transpose,YTR instrument,0,0,0);} else {
+	doo(_rh,meas1,start2,0,YTR transpose,YTR instrument,0,0,0);} else {
 	CHKK(start2); u2 a=rhythmRetDur(meas1,start2); CHKK(a.t,+a.n); YY_BREAK;
 }
 }
@@ -287,7 +293,7 @@ uint32_t *repeatTo N, *repeatFr N;
 	#// 2char percussion: hex value for any percussion event.
 	uint32_t pit; sscanf(YYP,"%x",&pit);
 	push (-0x3c /*which is C3*/ + pit ,(uint32_t**)&aboveCs);
-	do(_rh,meas1,start2,1,0,0,0,0,0);
+	doo(_rh,meas1,start2,1,0,0,0,0,0);
 }
 
 ^\[\]("pc"|"PC"){_}[l-z]	{CQ
@@ -315,7 +321,7 @@ uint32_t *repeatTo N, *repeatFr N;
 		case 'l': *YYP=54-0x3c; break;	// Tambourine
 						// Cowbell (56)
 	} push(*YYP,(uint32_t**)&aboveCs); *YYP='z';
-	do(_rh,meas1,start2,1,0,0,0,0,0);
+	doo(_rh,meas1,start2,1,0,0,0,0,0);
 }
 
 	/* THESE lines are not rhythm. */
@@ -478,7 +484,7 @@ if	((num-='0')<=9?doAlt=0:1) switch(num+='0'){ //+= avoids error
 	YTR isFl = fl;
 	YYC->charsAftTil += YYP[1] = 1;
 	YYC->skipMany = 0;
-	RETQUITIFLAST;
+	return 1;
 	break;
 }
 
@@ -486,36 +492,37 @@ if	((num-='0')<=9?doAlt=0:1) switch(num+='0'){ //+= avoids error
 
 ^\[\]CL{_}[GCFt]	Q do(_clef, *YYP);
 
-
-^\[\]vy{_}pppp	{
-	#// []vy first-layer velocity: common interpretations of "forte" and other sheet-music terms.
-	#// This velocity is applied until another line is found that's had a velocity specified.
+	/* m4_append([[TRANSFR]],[[vy]]) */
+^\[\]vy{_}pppp	%{
+	#// []vy first-layer vlocity: common interpretations of "forte" and other sheet-music terms.
+	#// This vlocity is applied until another line is found that's had a vlocity specified.
 	#// It is re-applied in subsequent columns.
-		Q veloc=doVeloc(8); }
-^\[\]vy{_}ppp	Q veloc=doVeloc(20);
-^\[\]vy{_}pp	Q veloc=doVeloc(31);
-^\[\]vy{_}p	Q veloc=doVeloc(42);
-^\[\]vy{_}mp	Q veloc=doVeloc(53);
-^\[\]vy{_}mf	Q veloc=doVeloc(64);
-^\[\]vy{_}f	Q veloc=doVeloc(80);
-^\[\]vy{_}ff	Q veloc=doVeloc(96);
-^\[\]vy{_}fff	Q veloc=doVeloc(112);
-^\[\]vy{_}ffff	Q veloc=doVeloc(127);
+		Q volec=setVel(YYG yy_buffer_stack_top, 8);%}
+^\[\]vy{_}ppp	Q volec=setVel(YYG yy_buffer_stack_top, 20);
+^\[\]vy{_}pp	Q volec=setVel(YYG yy_buffer_stack_top, 31);
+^\[\]vy{_}p	Q volec=setVel(YYG yy_buffer_stack_top, 42);
+^\[\]vy{_}mp	Q volec=setVel(YYG yy_buffer_stack_top, 53);
+^\[\]vy{_}mf	Q volec=setVel(YYG yy_buffer_stack_top, 64);
+^\[\]vy{_}f	Q volec=setVel(YYG yy_buffer_stack_top, 80);
+^\[\]vy{_}ff	Q volec=setVel(YYG yy_buffer_stack_top, 96);
+^\[\]vy{_}fff	Q volec=setVel(YYG yy_buffer_stack_top, 112);
+^\[\]vy{_}ffff	Q volec=setVel(YYG yy_buffer_stack_top, 127);;
 
+	/* m4_append([[TRANSFR]],[[Vy]]) */
 ^\[\]Vy{_}[a-z]	{Q
-	#// []Vy second-layer velocity: enable 1-or-2char hexadecimal covering of all MIDI velocities (when uppercase)
-	#// and (when lowercase) a 1char covering of "many" MIDI velocities with range a-z.
+	#// []Vy second-layer vlocity: enable 1-or-2char hexadecimal covering of all MIDI vlocities (when uppercase)
+	#// and (when lowercase) a 1char covering of "many" MIDI vlocities with range a-z.
 	#// "Pianissimo" and friends disallowed here.
-	veloc = doVeloc((*YYP - 'a') * 127 / 25); }
+	volec= setVel(YYG yy_buffer_stack_top, (*YYP - 'a') * 127 / 25); }
 ^\[\]Vy{_}[0-9A-F]{1,2}	{Q
 	unsigned a; sscanf(YYP,"%x",&a);
-	FF("Excess velocity capped at quadruple forte ('ffff', CAPS HEX '%x')");
-	veloc=doVeloc(a);
+	FF("Excess vlocity capped at quadruple forte ('ffff', CAPS HEX '%x')");
+	volec=setVel(YYG yy_buffer_stack_top, a);
 	
 }
 ^\[\]V[0-9Y]{_}[a-z]+;{0,1}	%{Q
-	#// []VY third-layer velocity: when digit substituted for Y in "VY", allow compact stacking of several velocities.
-	#// After all velocities are popped off of stack (by equal number of notes), discard stack.
+	#// []VY third-layer vlocity: when digit substituted for Y in "VY", allow compact stacking of several vlocities.
+	#// After all vlocities are popped off of stack (by equal number of notes), discard stack.
 	#// At that point abide by []vy and []Vy rules. []V0 isn't zero but ten, incidentally, and []VY is just one.
 	#define until meas1
 	until = 16;
@@ -525,7 +532,7 @@ if	((num-='0')<=9?doAlt=0:1) switch(num+='0'){ //+= avoids error
 	else			until = 1;
 	for (uint8_t ii=0; ii<MYYL&&ii<until; ++ii) {
 		if   (YYP[ii] == ';') break;
-		push((YYP[ii] - 'a') * 127 / 25, &velocs);
+		push((YYP[ii] - 'a') * 127 / 25, &vlocs);
 		if   (ii == 255)	  break;
 	}
 	
@@ -556,6 +563,7 @@ if	((num-='0')<=9?doAlt=0:1) switch(num+='0'){ //+= avoids error
 		    /* m4_append([[COMM2]],[[/]])m4_append([[COMM2]],[[*]])*/
 		    /* COMM1 #define CHARSTRING m4_defn([[RHYMWID]]) COMM2 */
 		    /* COMM1 #define MEASSTRING m4_defn([[MEASCHR]]) COMM2 */
+		    /* COMM1 #define TRANSTRING m4_defn([[TRANSFR]]) COMM2 */
 
 %%
 
@@ -563,12 +571,13 @@ if	((num-='0')<=9?doAlt=0:1) switch(num+='0'){ //+= avoids error
 #define MKR(x)	    RMK(x)
 		    CN char *widR = MKR(CHARSTRING);
 		    CN char *measchr = MKR(MEASSTRING);
+		    CN char *trnR = MKR(TRANSTRING);
 /* char *widR now declared/initialized */
 #ifndef CHARSTRING
 #warning Preprocessor failure in tfm.l! Search for "m4_" in code.
 #endif
 
-#include <ctype.h>
+//#include <ctype.h>
 
 #define CAPSR(x) (x<96)
 

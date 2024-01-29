@@ -63,23 +63,27 @@ if (isFirst||toBlk!=mBlk[toMeas]) { toBlk=mBlk[toMeas];
 	#ifndef NOARGS
 	if (toBlk-1) {
 	uint32_t fft_len = typLns[toBlk-1] - (toBlk-2?typLns[toBlk-2]:0);
-	uint32_t *from4to N; (ALL(from4to) fft_len); for (uint32_t y = -1;++y<fft_len;) from4to[y]=y;
+	uint32_t *from4To N, *shoulTo N; (ALL(from4To) fft_len); (CLL(shoulTo) fft_len);
+	for (uint32_t y = -1;++y<fft_len;) from4To[y]=y;
 	for (uint32_t n,x=(toBlk-2)?actsc[0][toBlk-2]:0;n=0,x<actsc[0][toBlk-1];++x)	if (*x[*acs]==1) {//let's find spot
-		(ALL(from4to) ++fft_len);
-		while (from4to[n]!=x[*acs][2]) ++n;
-		memmove(&from4to[n+1],&from4to[n],(fft_len-n-1)*4);
-		from4to[n]=x[*acs][2];
+		(ALL(from4To) ++fft_len); (ALL(shoulTo) fft_len);
+		while (from4To[n]!=x[*acs][2]) ++n;
+		memmove(&from4To[n+1],&from4To[n],(fft_len-n-1)*4);
+		memmove(&shoulTo[n+1],&shoulTo[n],(fft_len-n-1)*4);
+		if (shoulTo[n]==0) shoulTo[n]=1;
+		from4To[n]=x[*acs][2];
 									} else	if (*x[*acs]==4) {//let's find spot
-		while (from4to[n]!=x[*acs][2]) ++n;
-		memmove(&from4to[n],&from4to[n+1],(fft_len-n-1)*4);
-		(ALL(from4to) --fft_len);
+		while (from4To[n]!=x[*acs][2]) ++n;
+		memmove(&from4To[n],&from4To[n+1],(fft_len-n-1)*4);
+		(ALL(from4To) --fft_len); (ALL(shoulTo) fft_len);
 	}
 	if (fft_len>topYtrLns)	(ALL(ytr) fft_len), topYtrLns=fft_len;
 	trr *stk2 N;		(ALL(stk2) topYtrLns);
-	for (uint32_t x=-1;++x<topYtrLns;) memcpy(&stk2[x],&ytr[x],sizeof(trr));
-	for (uint32_t x=-1;++x<fft_len||(F stk2)|(F from4to);)
-		if (from4to[x]+1)	memcpy(&ytr[x], &stk2[from4to[x]],sizeof(trr));
+	for (uint32_t x=-1;++x<topYtrLns;) memcpy(&stk2[x],&ytr[x],sizeof(trr)), stk2[x].dido=1;
+	for (uint32_t x=-1;++x<fft_len||(F stk2)|(F from4To)|(F shoulTo);) {
+		if (from4To[x]+1)	memcpy(&ytr[x], &stk2[from4To[x] ],sizeof(trr)), ytr[x].doto= (shoulTo[x]|ytr[x].doto);
 		else			INIT_BUF(ytr[x]);
+	}
 	if (ANLZ&&Do>TO&&printf(">>> ANALYZING block transition: %d to %d. Channels without aligned rhythms are suspect.\n", toBlk-1, toBlk))
 	for (uint32_t j,x=typLns[toBlk]-typLns[toBlk-1]; x--; putchar('\n'))
 		for (j=PRNTIF("wait...           ", x&&ytr[x].channel==ytr[x-1].channel) // OR logic always returns 1
@@ -87,6 +91,7 @@ if (isFirst||toBlk!=mBlk[toMeas]) { toBlk=mBlk[toMeas];
 			if (rhsAt[toBlk-1][j++]==x) fputs("is a rhythm",stdout);
 	}
 	#endif
+
 }
 return toBlk;
 }
@@ -218,7 +223,8 @@ rewind(stdin); tfmlex_init (&SCANNER1);
 char **argsv N; for (char go=1,wid,*(CLL(pre)3),hold,x; go||(F pre);) {
 	go = yylex(0,0,0,SCANNER1); if(TYPEGETPLUS EN) continue; //if no squarelines here
 	typeget(NUMBLK--, tx+TYPEGETPLUS[*TYPEGETPLUS]-1); *(int16_t*)pre=0;
-	NUMBLK[(ALL(rhsAt) NUMBLK+8)]=   // thisis 1st analysis line-by-line (unTFM-like)
+	NUMBLK[(ALL(rhsAt) NUMBLK+8)]=   // this is the 1st analysis
+	NUMBLK[(ALL(trnAt) NUMBLK+8)]=   //     line-by-line (unTFM-like)
 	NUMBLK[(ALL(rhTyp) NUMBLK+8)] N; //     and removing [xy]rh arguments (aka 'xy')
 	(ALL(argsv) typLns[++NUMBLK]);   //     to put elsewhere before regex scripts
 	for (uint32_t jj=typLns[NUMBLK]; wid=1, NUMBLK-1?jj>typLns[NUMBLK-1]:jj; --jj) {
@@ -229,6 +235,9 @@ char **argsv N; for (char go=1,wid,*(CLL(pre)3),hold,x; go||(F pre);) {
 		  *(int16_t*)pre=*(int16_t*)(tx+begins[jj]+wid), //=memcpy 2 bytes
 		  push(typLns[NUMBLK]-jj,	&rhsAt  [NUMBLK-1]),
 		  push(x/2,			&rhTyp[NUMBLK-1]);
+	 	  x=myStrCmp(tx+begins[jj]+wid,trnR,1,pre); if (x)
+		  *(int16_t*)pre=*(int16_t*)(tx+begins[jj]+wid), //=memcpy 2 bytes
+		  push(typLns[NUMBLK]-jj,	&trnAt  [NUMBLK-1]);
 		tx[begins[jj]+wid+2]=hold;
 		hold=tx[begins[jj]+1+wid-2]; tx[begins[jj]+1+wid-2]='\0';
 		  argsv[jj-1]=strcpy(VC calloc(--wid,1),&tx[begins[jj]+1]);
@@ -248,9 +257,9 @@ do {		//we must allocate the scanner, a little more manually than Flex provides 
   (CLL(f) blksAt[YBT][NUMBLK]+1);
   //buf_size less end 2 nullbytes    //YY_SCANNER_T below implies Flex %option reentrant
   #if defined(DOYY)&defined(YY_TYPEDEF_YY_SCANNER_T)	// if DOYY used then remove %option noyy_scan_buffer
-	yy_scan_buffer(f,2,SCANNER1);			// without DOYY we use altcode lines from two places
+	tfm_scan_buffer(f,2,SCANNER1);			// without DOYY we use altcode lines from two places
 	#elif defined(DOYY)				// the first is from yy_scan_buffer()
-	yy_scan_buffer(f,2);				// the second from yy_switch_to_buffer()
+	tfm_scan_buffer(f,2);				// the second from yy_switch_to_buffer()
   #else
 	typedef struct yy_buffer_state s;		//altlines follow
 	s *(CLL(b)1);b->yy_buf_pos=b->yy_ch_buf=f;b->yy_buffer_status=YY_BUFFER_NEW;b->yy_input_file N;
@@ -288,28 +297,46 @@ for (uint32_t thisMeas=0,*ytr_n N;Do>=TO?(Do>TO?thisMeas++==LASTMEAS:thisMeas++=
 		else if (Do&&repeatFr[i]>LASTMEAS) repeatFr[i]=(F ytr2[i-1]);
 	}
 	thisBlock=advanceMeas(thisBlock, thisMeas, isFirst, &ptr, &pt2, argsv); isFirst=isFirst?FREE(argsv):0;
-	if (VERBOSE&&last-thisBlock&&Do>TO)
+	if (VERBOSE&&last-thisBlock&&Do>TO) {
 		printf("BLOCK ENDED %ld .............................................................................\n", (long)tM);
-		measTime=tM;
-		if (TOMEAS&&Do>TO&&thisMeas==TOMEAS) do_tms(measTime+!measTime, altTempo), do_tms(0,10), altTempo=0;
+		}
+	measTime=tM;
+	if (TOMEAS&&Do>TO&&thisMeas==TOMEAS) do_tms(measTime+!measTime, altTempo), do_tms(0,10), altTempo=0;
 	timesPos = mBlkOff[thisMeas] + mFro[thisMeas] + blksAt[0][thisBlock-1];
 	/*YYG yy_start = Do>TO?1+2*MEASURES:1+2*FIRSTMEAS;
 	for (startWithin=-1;++startWithin<mFro[thisMeas];) {
-		YYG yy_buffer_stack_top = topBlkLns-1;	// yylex returns 0 after last line
-		while(yylex(thisMeas,startWithin,measTime,SCANNER1));
-		measTime=measTime;
-		#endif
+		uint32_t i=trnAt[thisBlock-1]NN?trnAt[thisBlock-1][0]:0, ii=i;
+		while (ii) {
+			YYG yy_buffer_stack_top = trnAt[thisBlock-1][ii];
+			yylex(thisMeas,startWithin,measTime,SCANNER1);
+			--ii;
+		}
+		YYG yy_buffer_stack_top = topBlkLns-1;
+		do if (i==0||(YYG yy_buffer_stack_top==trnAt[thisBlock-1][i]?--i,0:1)) yylex(thisMeas,startWithin,measTime,SCANNER1); while(YYG yy_buffer_stack_top--);
 	}*/
 	YYG yy_start = Do>TO?1+2*SQUARES:1+2*FIRSTRUN;
 	for (startWithin=-1;++startWithin<mMid[thisMeas];) {
+		uint32_t i=trnAt[thisBlock-1]NN?trnAt[thisBlock-1][0]:0, ii=i;
+		while (ii) {
+			YYG yy_buffer_stack_top = trnAt[thisBlock-1][ii];
+			yylex(thisMeas,startWithin,measTime,SCANNER1);
+			--ii;
+		}
 		YYG yy_buffer_stack_top = topBlkLns-1;
-		while(yylex(thisMeas,startWithin,measTime,SCANNER1));
+		do if (i==0||(YYG yy_buffer_stack_top==trnAt[thisBlock-1][i]?--i,0:1)) yylex(thisMeas,startWithin,measTime,SCANNER1); while(YYG yy_buffer_stack_top--);
 		if (Do>TO) tM+=tiMes[timesPos];
 	}
 	YYG yy_start = Do>TO?1+2*MEASURES:1+2*FIRSTMEAS;
 	for (startWithin=-1;++startWithin<mBak[thisMeas];) {
+		uint32_t i=trnAt[thisBlock-1]NN?trnAt[thisBlock-1][0]:0, ii=i;
+		while (ii) {
+			YYG yy_buffer_stack_top = trnAt[thisBlock-1][ii];
+			yylex(thisMeas,startWithin,measTime,SCANNER1);
+			--ii;
+		}
 		YYG yy_buffer_stack_top = topBlkLns-1;
-		while(yylex(thisMeas,startWithin,measTime,SCANNER1));
+		do if (i==0||(YYG yy_buffer_stack_top==trnAt[thisBlock-1][i]?--i,0:1)) yylex(thisMeas,startWithin,measTime,SCANNER1); while(YYG yy_buffer_stack_top--);
+		if (Do>TO) tM+=tiMes[timesPos];
 	}
 	if (!ANLZ) printf("\\MEAS %d...\n",thisMeas);
 }
@@ -345,10 +372,11 @@ for (uint32_t *fctr N,I=0;(F fctr)||I==vN?0:1;++I) {
 }
 
 free(tiMes);free(mBlkOff);free(mFro);free(mMid);free(mBak);free(mBlk);free(ytr);
-free(bMea);free(bSpc);free(velocs);free(aboveCs);free(isFlt);free(begins);
+free(bMea);free(bSpc);free(vlocs);free(aboveCs);free(isFlt);free(begins);
 
-while (NUMBLK--) free(rhTyp[NUMBLK]), free(rhsAt[NUMBLK]);	free(rhsAt);free(rhTyp);
-								free(typLns);//typLns[0]=NUMLNS
+while (NUMBLK--) {/*if (trnAt[NUMBLK]NN)printf("FORBLOCK %u RHS IS %lu TRN IS %lu\n",NUMBLK,trnAt[NUMBLK][1],trnAt[NUMBLK][2]),*/free(rhTyp[NUMBLK]), free(rhsAt[NUMBLK]), free(trnAt[NUMBLK]);}
+		free(rhTyp); free(rhsAt); free(trnAt);
+		free(typLns);//typLns[0]=NUMLNS
 
 for (YBT=topBlkLns;YBT--?(F blksAt[YBT])|(F blksDo[YBT])|(F YYC->yy_ch_buf)|~(F YYC):(F blksAt)|(F blksDo);) ;
 free(YBS); free(SCANNER1);
